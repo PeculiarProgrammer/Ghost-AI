@@ -60,7 +60,6 @@ jobs:
           ln -s ../Runner.app
           cd ..
           zip -r app.ipa Payload
-          - name: Extract version from pubspec.yaml
 
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v3
