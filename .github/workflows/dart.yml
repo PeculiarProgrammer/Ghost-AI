@@ -175,5 +175,13 @@ jobs:
             ./ios/app.ipa
             ./android/*.apk
             ./windows/app.zip
-          tag: v${{ env.VERSION }}+${{ github.run_number }}
+          tag: v${{ env.VERSION }}+unreleased
           token: ${{ secrets.TOKEN }}
+          allowUpdates: true
+          replacesArtifacts: true
+          body: |
+            Release v${{ env.VERSION }}
+            - iOS
+            - Android
+            - Windows
+          
