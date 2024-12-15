@@ -69,12 +69,23 @@ jobs:
           cd ..
           zip -r app.ipa Payload
 
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          echo "VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')" >> $GITHUB_ENV
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/ios/iphoneos/app.ipa"
+          tag: v${{ env.VERSION }}+${{ github.run_number }}
+
+
   build_androidApk:
     name: Build Flutter App (Android)
 
     needs: [flutter_test]
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v3
