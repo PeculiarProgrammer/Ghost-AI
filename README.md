@@ -1,16 +1,13 @@
-# ghost_ai
+# Ghost AI
 
-A new Flutter project.
+A Flutter app that solves the game Ghost through the power of combinatorics.
 
-## Getting Started
+Note: Although this is advertised as AI, it is not. It's simply a semi-optimized brute force algorithm with a nice interface.
 
-This project is a starting point for a Flutter application.
+## TODO
 
-A few resources to get you started if this is your first Flutter project:
+- [ ] Enhance frequency algorithm
+- [ ] Make it functional on wearable devices to promote cheating
+- [ ] Add more dictionary options.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Any more?
