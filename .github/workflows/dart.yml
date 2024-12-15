@@ -33,8 +33,9 @@ jobs:
       - name: Analyze project source
         run: dart analyze
 
-      - name: Run tests
-        run: flutter test
+      # Uncomment the following lines when tests are implemented
+      # - name: Run tests
+      #   run: flutter test
 
   build_iOSApp:
     name: Build Flutter App (iOS)
