@@ -9,5 +9,6 @@ Note: Although this is advertised as AI, it is not. It's simply a semi-optimized
 - [ ] Enhance frequency algorithm
 - [ ] Make it functional on wearable devices to promote cheating
 - [ ] Add more dictionary options.
+- [ ] Implement tests
 
 Any more?
