@@ -646,17 +646,19 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
                   children: [
                     Text(
                       () {
-                        List<String> words = widget.dictionaryTrie
-                            .find(showWords!);
+                        List<String> words =
+                            widget.dictionaryTrie.find(showWords!);
                         words.sort((a, b) =>
                             (frequency[b] ?? 0).compareTo(frequency[a] ?? 0));
-                        return words.sublist(
+                        return words
+                            .sublist(
                                 0,
                                 min(
                                     widget.dictionaryTrie
                                         .find(showWords!)
                                         .length,
-                                    128)).join(", ");
+                                    128))
+                            .join(", ");
                       }(), // Don't ask
                       style: const TextStyle(fontSize: 16),
                     ),
