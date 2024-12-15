@@ -85,7 +85,7 @@ jobs:
 
       - run: flutter clean
 
-      - run: flutter build apk --debug
+      - run: flutter build apk
 
       - name: Extract version from pubspec.yaml
         id: extract_version
