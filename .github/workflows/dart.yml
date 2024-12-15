@@ -100,6 +100,38 @@ jobs:
           name: android-apk
           path: build/app/outputs/flutter-apk/*.apk
 
+  build_windowsExe:
+    name: Build Flutter App (Windows)
+
+    needs: [flutter_test]
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: "3.16.7"
+
+      - run: flutter pub get
+
+      - run: flutter clean
+
+      - run: flutter build windows
+
+      - run: |
+          cd build\windows\x64\runner\Release\
+          zip -r app.zip .
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-exe
+          path: build/windows/x64/runner/Release/app.zip
+          
+
 
   release:
     name: Create Release
@@ -125,6 +157,12 @@ jobs:
           name: android-apk
           path: ./android
 
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-exe
+          path: ./windows
+
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
@@ -136,5 +174,6 @@ jobs:
           artifacts: |
             ./ios/app.ipa
             ./android/*.apk
+            ./windows/app.zip
           tag: v${{ env.VERSION }}+${{ github.run_number }}
           token: ${{ secrets.TOKEN }}
