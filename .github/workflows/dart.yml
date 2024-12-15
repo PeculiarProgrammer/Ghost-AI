@@ -123,7 +123,7 @@ jobs:
 
       - run: |
           cd build\windows\x64\runner\Release\
-          zip -r app.zip .
+          powershell Compress-Archive -Path * -DestinationPath app.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
@@ -136,7 +136,7 @@ jobs:
   release:
     name: Create Release
 
-    needs: [build_iOSApp, build_androidApk]
+    needs: [build_iOSApp, build_androidApk, build_windowsExe]
 
     runs-on: ubuntu-latest
 
