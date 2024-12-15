@@ -60,6 +60,14 @@ jobs:
           ln -s ../Runner.app
           cd ..
           zip -r app.ipa Payload
+          - name: Extract version from pubspec.yaml
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-app
+          path: build/ios/iphoneos/app.ipa
+  
 
   build_androidApk:
     name: Build Flutter App (Android)
@@ -87,13 +95,47 @@ jobs:
 
       - run: flutter build apk
 
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/*.apk
+
+
+  release:
+    name: Create Release
+
+    needs: [build_iOSApp, build_androidApk]
+
+    runs-on: ubuntu-latest
+
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download iOS artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ios-app
+          path: ./ios
+
+      - name: Download Android artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: android-apk
+          path: ./android
+
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
           echo "VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')" >> $GITHUB_ENV
 
-      - uses: ncipollo/release-action@v1
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/flutter-apk/*"
+          artifacts: |
+            ./ios/app.ipa
+            ./android/*.apk
           tag: v${{ env.VERSION }}+${{ github.run_number }}
           token: ${{ secrets.TOKEN }}
