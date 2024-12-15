@@ -61,15 +61,16 @@ jobs:
           cd ..
           zip -r app.ipa Payload
 
-      # - name: Extract version from pubspec.yaml
-      #   id: extract_version
-      #   run: |
-      #     echo "VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')" >> $GITHUB_ENV
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          echo "VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')" >> $GITHUB_ENV
 
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "build/ios/iphoneos/app.ipa"
-          tag: v1.0.0+${{ github.run_number }}
+          tag: v${{ env.VERSION }}+${{ github.run_number }}
+          token: ${{ secrets.TOKEN }}
 
 
   build_androidApk:
@@ -98,12 +99,13 @@ jobs:
 
       - run: flutter build apk --debug
 
-      # - name: Extract version from pubspec.yaml
-      #   id: extract_version
-      #   run: |
-      #     echo "VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')" >> $GITHUB_ENV
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          echo "VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')" >> $GITHUB_ENV
 
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/apk/debug/*"
-          tag: v1.0.0+${{ github.run_number }}
+          tag: v${{ env.VERSION }}+${{ github.run_number }}
+          token: ${{ secrets.TOKEN }}
