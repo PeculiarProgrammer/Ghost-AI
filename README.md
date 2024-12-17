@@ -7,7 +7,7 @@ Note: Although this is advertised as AI, it is not. It's simply a semi-optimized
 ## TODO
 
 - [ ] Enhance frequency algorithm
-- [ ] Make the app functional on wearable devices to improve ease-of-use
+- [x] Make the app functional on wearable devices to improve ease-of-use
 - [ ] Add more dictionary options
 - [ ] Implement tests
 

@@ -216,6 +216,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.3.0"
+  wear_plus:
+    dependency: "direct main"
+    description:
+      name: wear_plus
+      sha256: "1a21afed80b7cd4b6f353229a92a9664330d15a17114ff5e20578f093b491203"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
 sdks:
   dart: ">=3.4.0 <4.0.0"
   flutter: ">=3.18.0-18.0.pre.54"

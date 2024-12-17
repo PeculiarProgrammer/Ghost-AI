@@ -2,8 +2,8 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:retrieval/trie.dart';
+import 'package:wear_plus/wear_plus.dart';
 import "./algorithm.dart";
 import "./data/frequency.dart";
 import 'data/full_scrabble.dart';
@@ -17,25 +17,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
     return MaterialApp(
       title: 'Ghost AI',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+        colorScheme: ColorScheme.dark(
+            primary: Colors.lightBlue,
+            tertiary: Colors.purple,
+            tertiaryContainer: Colors.purple[100]),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Ghost AI'),
+      home: WatchShape(
+        builder: (BuildContext context, WearShape shape, Widget? child) {
+          return AmbientMode(
+            builder: (context, mode, child) {
+              return const MyHomePage();
+            },
+          );
+        },
+      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -59,46 +64,40 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Dictionary type: "),
-                    DropdownButton<DictionaryType>(
-                        value: dictionaryType,
-                        items: const [
-                          DropdownMenuItem(
-                            value: DictionaryType.semiReasonableScrabble,
-                            child: Text("Semi-Reasonable Scrabble"),
-                          ),
-                          DropdownMenuItem(
-                            value: DictionaryType.reasonableScrabble,
-                            child: Text("Reasonable Scrabble"),
-                          ),
-                          DropdownMenuItem(
-                            value: DictionaryType.fullScrabble,
-                            child: Text("Full Scrabble"),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value == null) {
-                            return;
-                          }
-                          setState(() {
-                            dictionaryType = value;
-                          });
-                          generateGameFile();
-                        }),
-                  ],
+                const Text("Dictionary type: "),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DropdownButton<DictionaryType>(
+                      value: dictionaryType,
+                      items: const [
+                        DropdownMenuItem(
+                          value: DictionaryType.semiReasonableScrabble,
+                          child: Text("Semi-Reasonable Scrabble"),
+                        ),
+                        DropdownMenuItem(
+                          value: DictionaryType.reasonableScrabble,
+                          child: Text("Reasonable Scrabble"),
+                        ),
+                        DropdownMenuItem(
+                          value: DictionaryType.fullScrabble,
+                          child: Text("Full Scrabble"),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) {
+                          return;
+                        }
+                        setState(() {
+                          dictionaryType = value;
+                        });
+                        generateGameFile();
+                      }),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -125,7 +124,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(width: 32),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     const Text("Player: "),
                     DropdownButton<int>(
                       value: player,
@@ -493,55 +496,58 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
           )
         else
-          SizedBox(
-            height: 256,
-            child: SingleChildScrollView(
-              child: Column(
-                  children: sortedLetters.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        entry.key,
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "at ${(entry.value * 100).toStringAsFixed(1)}% chance",
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              if (showWords != widget.path + entry.key) {
-                                showWords = widget.path + entry.key;
-                              } else {
-                                showWords = null;
-                              }
-                            });
-                          },
-                          style: showWords == widget.path + entry.key
-                              ? ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .tertiaryContainer,
-                                )
-                              : null,
-                          child: Text(
-                            "${showWords == widget.path + entry.key ? "Hide" : "View"} Words",
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              height: 100,
+              child: SingleChildScrollView(
+                child: Column(
+                    children: sortedLetters.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "at ${(entry.value * 100).toStringAsFixed(1)}% chance",
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                if (showWords != widget.path + entry.key) {
+                                  showWords = widget.path + entry.key;
+                                } else {
+                                  showWords = null;
+                                }
+                              });
+                            },
                             style: showWords == widget.path + entry.key
-                                ? TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary)
+                                ? ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .tertiaryContainer,
+                                  )
                                 : null,
-                          )),
-                    ],
-                  ),
-                );
-              }).toList()),
+                            child: Text(
+                              "${showWords == widget.path + entry.key ? "Hide" : "View"} Words",
+                              style: showWords == widget.path + entry.key
+                                  ? TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.tertiary)
+                                  : null,
+                            )),
+                      ],
+                    ),
+                  );
+                }).toList()),
+              ),
             ),
           ),
         if (isTurn)
@@ -640,7 +646,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
             padding:
                 const EdgeInsets.symmetric(vertical: 5.0, horizontal: 16.0),
             child: SizedBox(
-              height: 200,
+              height: 100,
               child: SingleChildScrollView(
                 child: Column(
                   children: [
