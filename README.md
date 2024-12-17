@@ -7,8 +7,9 @@ Note: Although this is advertised as AI, it is not. It's simply a semi-optimized
 ## TODO
 
 - [ ] Enhance frequency algorithm
-- [x] Make the app functional on wearable devices to improve ease-of-use
+- [x] Make the app functional on wearable devices to improve ease-of-use ([watch](https://github.com/PeculiarProgrammer/Ghost-AI/tree/watch) branch)
 - [ ] Add more dictionary options
 - [ ] Implement tests
+- [ ] Improve efficiency
 
 If you can think of any more, please leave an issue.
