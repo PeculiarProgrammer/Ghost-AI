@@ -70,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
             child: Column(
               children: [
+                const SizedBox(height: 32),
                 const Text("Dictionary type: "),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -187,6 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     path: path,
                     dictionaryType: dictionaryType,
                   ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
