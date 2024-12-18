@@ -302,7 +302,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
   void _initializeAlgorithm() {
     // I extrapolated this out of build just to be unnecessarily safe (turns out it was a good idea)
 
-    if (widget.dictionaryTrie.find(widget.path).isEmpty ||
+    if (!widget.dictionaryTrie.hasChildren(widget.path) ||
         widget.dictionaryTrie.has(widget.path)) {
       return;
     }
@@ -315,8 +315,10 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
     sortedLetters.clear();
 
     if (isTurn) {
+      var temporaryDictionary = widget.dictionaryTrie.root.walk(widget.path)!;
+
       for (var letter in letters) {
-        if (widget.dictionaryTrie.find(widget.path + letter).isEmpty) {
+        if (!temporaryDictionary.hasChild(letter)) {
           continue;
         }
         optimalGame[letter] = determinePercentage(
@@ -341,7 +343,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
       );
     }
 
-    if (widget.dictionaryTrie.find(widget.path).isEmpty) {
+    if (!widget.dictionaryTrie.hasChildren(widget.path)) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Column(
@@ -352,7 +354,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            if (fullScrabbleTrie.find(widget.path).isNotEmpty)
+            if (fullScrabbleTrie.hasChildren(widget.path))
               const Text(
                 "Note: Words exist in the full Scrabble dictionary. Change the dictionary type to view them.",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300),
