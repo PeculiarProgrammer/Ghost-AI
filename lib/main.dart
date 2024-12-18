@@ -1,6 +1,7 @@
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wear_plus/wear_plus.dart';
@@ -58,11 +59,16 @@ class _MyHomePageState extends State<MyHomePage> {
   String path = "";
   DictionaryType dictionaryType = DictionaryType.semiReasonableScrabble;
   bool isGenerating = false;
+  Trie fullScrabbleTrie = Trie();
 
   @override
   void initState() {
     super.initState();
     generateGameFile();
+
+    for (var word in scrabbleComplete) {
+      fullScrabbleTrie.insert(word);
+    }
   }
 
   @override
@@ -194,6 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       playerCount: playerCount,
                       path: path,
                       dictionaryType: dictionaryType,
+                    fullScrabbleTrie: fullScrabbleTrie,
                     ),
                   const SizedBox(height: 32),
                 ],
@@ -271,6 +278,7 @@ class AlgorithmShower extends StatefulWidget {
   final int playerCount;
   final String path;
   final DictionaryType dictionaryType;
+  final Trie fullScrabbleTrie;
 
   const AlgorithmShower({
     Key? key,
@@ -280,6 +288,7 @@ class AlgorithmShower extends StatefulWidget {
     required this.playerCount,
     required this.path,
     required this.dictionaryType,
+    required this.fullScrabbleTrie,
   }) : super(key: key);
 
   @override
@@ -287,20 +296,17 @@ class AlgorithmShower extends StatefulWidget {
 }
 
 class _AlgorithmShowerState extends State<AlgorithmShower> {
+  Future<List<dynamic>>? future;
+
   bool isTurn = false;
   Map<String, double> optimalGame = {};
   List<MapEntry<String, double>> sortedLetters = [];
   String? showWords;
-  Trie fullScrabbleTrie = Trie();
 
   @override
   void initState() {
     super.initState();
     _initializeAlgorithm();
-
-    for (var word in scrabbleComplete) {
-      fullScrabbleTrie.insert(word);
-    }
   }
 
   @override
@@ -314,9 +320,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
   }
 
   void _initializeAlgorithm() {
-    // I extrapolated this out of build just to be unnecessarily safe (turns out it was a good idea)
-
-    if (widget.dictionaryTrie.find(widget.path).isEmpty ||
+    if (!widget.dictionaryTrie.hasChildren(widget.path) ||
         widget.dictionaryTrie.has(widget.path)) {
       return;
     }
@@ -328,22 +332,78 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
     optimalGame.clear();
     sortedLetters.clear();
 
-    if (isTurn) {
-      for (var letter in letters) {
-        if (widget.dictionaryTrie.find(widget.path + letter).isEmpty) {
-          continue;
-        }
-        optimalGame[letter] = determinePercentage(
-            widget.path + letter, widget.gameData, widget.playerCount);
-      }
+    future = compute(determinePercentageIsolate, [
+      widget.dictionaryTrie,
+      widget.gameData,
+      widget.playerCount,
+      widget.path,
+      isTurn,
+    ]);
+  }
 
-      sortedLetters.addAll(optimalGame.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value)));
+  static List<dynamic> determinePercentageIsolate(List<dynamic> arguments) {
+    var isTurn = arguments[4] as bool;
+
+    if (!isTurn) {
+      return [null, null];
     }
+
+    var dictionaryTrie = arguments[0] as Trie;
+    var gameData = arguments[1] as Map<String, int>;
+    var playerCount = arguments[2] as int;
+    var path = arguments[3] as String;
+
+    var temporaryDictionary = dictionaryTrie.root.walk(path)!;
+
+    var optimalGame = <String, double>{};
+    var sortedLetters = <MapEntry<String, double>>[];
+
+    for (var letter in letters) {
+      if (!temporaryDictionary.hasChild(letter)) {
+        continue;
+      }
+      optimalGame[letter] =
+          determinePercentage(path + letter, gameData, playerCount);
+    }
+
+    sortedLetters.addAll(optimalGame.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value)));
+
+    return [optimalGame, sortedLetters];
   }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<List<dynamic>>(
+        future: future,
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+              return const SizedBox();
+            case ConnectionState.waiting:
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: CircularProgressIndicator(),
+              );
+            case ConnectionState.active:
+              return const SizedBox();
+            case ConnectionState.done:
+              if (snapshot.hasError) {
+                return Text("Error: ${snapshot.error}");
+              }
+
+              if (snapshot.data![0] != null) {
+                optimalGame = snapshot.data![0] as Map<String, double>;
+                sortedLetters =
+                    snapshot.data![1] as List<MapEntry<String, double>>;
+              }
+
+              return loadedInterface(context);
+          }
+        });
+  }
+
+  RenderObjectWidget loadedInterface(BuildContext context) {
     if (widget.dictionaryTrie.has(widget.path)) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -355,7 +415,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
       );
     }
 
-    if (widget.dictionaryTrie.find(widget.path).isEmpty) {
+    if (!widget.dictionaryTrie.hasChildren(widget.path)) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Column(
@@ -366,7 +426,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            if (fullScrabbleTrie.find(widget.path).isNotEmpty)
+            if (widget.fullScrabbleTrie.hasChildren(widget.path))
               const Text(
                 "Note: Words exist in the full Scrabble dictionary. Change the dictionary type to view them.",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300),
