@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:retrieval/trie.dart';
 import "./algorithm.dart";
 import "./data/frequency.dart";
 import 'data/full_scrabble.dart';
@@ -234,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       Map<String, int> game = {};
 
-      evaluate(arguments[1], arguments[2], dictionary, game);
+      evaluate(arguments[1], arguments[2], dictionary.root, game);
 
       sendPort.send([game, dictionary]);
     }, [receivePort.sendPort, player, playerCount, dictionaryType]);
