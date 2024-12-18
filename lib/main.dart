@@ -2,7 +2,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:retrieval/trie.dart';
+import 'package:flutter/services.dart';
 import 'package:wear_plus/wear_plus.dart';
 import "./algorithm.dart";
 import "./data/frequency.dart";
@@ -237,7 +237,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       Map<String, int> game = {};
 
-      evaluate(arguments[1], arguments[2], dictionary, game);
+      evaluate(arguments[1], arguments[2], dictionary.root, game);
 
       sendPort.send([game, dictionary]);
     }, [receivePort.sendPort, player, playerCount, dictionaryType]);

@@ -1,28 +1,32 @@
 library evaluate;
 
-import 'package:retrieval/trie.dart';
-
 final List<String> letters =
     List.generate(26, (i) => String.fromCharCode(97 + i));
 final Set<String> lettersSet = Set.from(letters);
 
-List<String> recursiveCartesianProduct(
-    String path, int n, int depth, Trie dictionary) {
+List<TrieNode> recursiveCartesianProduct(
+    int n, int depth, TrieNode dictionary) {
   if (depth == 0) {
-    return [path];
+    return [dictionary];
   }
 
-  List<String> combinations = [];
+  List<TrieNode> combinations = [];
 
   for (var letter in letters) {
-    if ((dictionary.find(path + letter).isEmpty ||
-            dictionary.has(path + letter)) &&
+    var temporaryDictionary = dictionary.walk(letter);
+
+    if (temporaryDictionary == null) {
+      continue;
+    }
+
+    if ((temporaryDictionary.childrenCount == 0 ||
+            temporaryDictionary.isEndOfWord) &&
         depth > 1) {
       continue;
     }
 
-    combinations.addAll(
-        recursiveCartesianProduct(path + letter, n, depth - 1, dictionary));
+    combinations
+        .addAll(recursiveCartesianProduct(n, depth - 1, temporaryDictionary));
   }
 
   return combinations;
@@ -37,39 +41,40 @@ int mex(Set<dynamic> s) {
 }
 
 dynamic evaluate(
-    int player, int playerCount, Trie dictionary, Map<String, int> game,
-    {String path = ""}) {
-  if (dictionary.find(path).isEmpty) {
+    int player, int playerCount, TrieNode dictionary, Map<String, int> game) {
+  if (dictionary.childrenCount == 0) {
     return null;
   }
 
-  if (dictionary.has(path)) {
+  if (dictionary.isEndOfWord) {
     return false;
   } else {
     Set<dynamic> chv = <dynamic>{};
     for (var letter in lettersSet) {
-      if (dictionary.find(path + letter).isEmpty ||
-          dictionary.has(path + letter)) {
+      var temporaryDictionary = dictionary.walk(letter);
+
+      if (temporaryDictionary == null ||
+          temporaryDictionary.childrenCount == 0 ||
+          temporaryDictionary.isEndOfWord) {
         continue;
       }
-      if (path.length % playerCount == player) {
-        chv.add(evaluate(player, playerCount, dictionary, game,
-            path: path + letter));
+      if (dictionary.currentLength % playerCount == player) {
+        chv.add(evaluate(player, playerCount, temporaryDictionary, game));
       } else {
         int iterations = ((player % playerCount) -
-                path.length % playerCount +
+                dictionary.currentLength % playerCount +
                 playerCount) %
             playerCount; // This solves path.length + iterations % playerCount == player
 
         for (var combination in recursiveCartesianProduct(
-            path + letter, iterations - 1, iterations - 1, dictionary)) {
-          chv.add(evaluate(player, playerCount, dictionary, game,
-              path: combination));
+            iterations - 1, iterations - 1, temporaryDictionary)) {
+          chv.add(evaluate(player, playerCount, combination, game));
         }
       }
     }
+
     int answer = mex(chv);
-    game[path] = answer;
+    game[dictionary.currentWord] = answer;
 
     return answer;
   }
@@ -100,4 +105,157 @@ double determinePercentage(
   }
 
   return good / count;
+}
+
+// This is a slightly modified version of the trie implementation from retrieval (10x faster than the original for this use case)
+class Trie {
+  final root = TrieNode<void>(key: null, value: null);
+
+  void insert(String word) {
+    var currentNode = root;
+
+    var characters = word.split("");
+
+    for (int i = 0; i < characters.length; i++) {
+      currentNode = currentNode.putChildIfAbsent(characters[i], value: null);
+      currentNode.currentLength = i + 1;
+      currentNode.currentWord = word.substring(0, i + 1);
+    }
+
+    currentNode.isEndOfWord = true;
+  }
+
+  bool has(String word) {
+    return findPrefix(word, fromNode: root)?.isEndOfWord ?? false;
+  }
+
+  bool hasChildren(String word) {
+    final prefix = findPrefix(word, fromNode: root);
+
+    if (prefix == null) {
+      return false;
+    }
+
+    return prefix.childrenCount > 0;
+  }
+
+  List<String> find(String prefix) {
+    final lastCharacterNode = findPrefix(prefix, fromNode: root);
+
+    if (lastCharacterNode == null) {
+      return [];
+    }
+
+    final stack = <_PartialMatch>[
+      _PartialMatch(node: lastCharacterNode, partialWord: prefix),
+    ];
+    final foundWords = <String>[];
+
+    while (stack.isNotEmpty) {
+      final partialMatch = stack.removeLast();
+
+      if (partialMatch.node.isEndOfWord) {
+        foundWords.add(partialMatch.partialWord);
+      }
+
+      for (final child in partialMatch.node.getChildren()) {
+        stack.add(
+          _PartialMatch(
+            node: child,
+            partialWord: "${partialMatch.partialWord}${child.key}",
+          ),
+        );
+      }
+    }
+
+    return foundWords;
+  }
+}
+
+class _PartialMatch {
+  final TrieNode node;
+  final String partialWord;
+
+  _PartialMatch({
+    required this.node,
+    required this.partialWord,
+  });
+
+  @override
+  String toString() => '_PartialMatch(node: $node, prefix: $partialWord)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is _PartialMatch &&
+        other.node == node &&
+        other.partialWord == partialWord;
+  }
+
+  @override
+  int get hashCode => node.hashCode ^ partialWord.hashCode;
+}
+
+class TrieNode<T> {
+  final String? key;
+
+  T? value;
+
+  int currentLength = 0;
+
+  String currentWord = "";
+
+  bool isEndOfWord = false;
+
+  bool get isRoot => key == null;
+
+  final Map<String, TrieNode<T>> _children = {};
+
+  bool get hasChildren => _children.isEmpty;
+
+  int get childrenCount => _children.length;
+
+  TrieNode({required this.key, this.value});
+
+  Iterable<TrieNode<T>> getChildren() {
+    return _children.values;
+  }
+
+  bool hasChild(String key) {
+    return _children.containsKey(key);
+  }
+
+  TrieNode<T>? getChild(String key) {
+    return _children[key];
+  }
+
+  TrieNode<T> putChildIfAbsent(String key, {T? value}) {
+    return _children.putIfAbsent(
+      key,
+      () => TrieNode<T>(key: key, value: value),
+    );
+  }
+
+  TrieNode<T>? walk(String key) {
+    return findPrefix(key, fromNode: this);
+  }
+
+  @override
+  String toString() {
+    return "TrieNode(key=$key, value=$value)";
+  }
+}
+
+TrieNode<T>? findPrefix<T>(String prefix, {required TrieNode<T> fromNode}) {
+  TrieNode<T>? currentNode = fromNode;
+
+  for (final character in prefix.split("")) {
+    currentNode = currentNode?.getChild(character);
+    if (currentNode == null) {
+      return null;
+    }
+  }
+
+  return currentNode;
 }
