@@ -186,8 +186,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                   else if (gameData.isEmpty)
                     const Padding(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+                      padding: EdgeInsets.symmetric(
+                          vertical: 24.0, horizontal: 20.0),
                       child: Text("Please choose which player you want to win.",
                           style: TextStyle(fontSize: 24),
                           textAlign: TextAlign.center),
@@ -200,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       playerCount: playerCount,
                       path: path,
                       dictionaryType: dictionaryType,
-                    fullScrabbleTrie: fullScrabbleTrie,
+                      fullScrabbleTrie: fullScrabbleTrie,
                     ),
                   const SizedBox(height: 32),
                 ],
@@ -609,8 +609,9 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
                               "${showWords == widget.path + entry.key ? "Hide" : "View"} Words",
                               style: showWords == widget.path + entry.key
                                   ? TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.tertiary)
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary)
                                   : null,
                             )),
                       ],
