@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:wear_plus/wear_plus.dart';
 import 'package:rotary_scrollbar/rotary_scrollbar.dart';
 
