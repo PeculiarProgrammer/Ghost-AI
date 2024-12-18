@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wear_plus/wear_plus.dart';
+import 'package:rotary_scrollbar/rotary_scrollbar.dart';
+
 import "./algorithm.dart";
 import "./data/frequency.dart";
 import 'data/full_scrabble.dart';
@@ -47,6 +49,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final scrollController = ScrollController();
+
   Map<String, int> gameData = {};
   Trie? dictionaryTrie;
   int player = 0;
@@ -64,132 +68,136 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-                const Text("Dictionary type: "),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DropdownButton<DictionaryType>(
-                      value: dictionaryType,
-                      items: const [
-                        DropdownMenuItem(
-                          value: DictionaryType.semiReasonableScrabble,
-                          child: Text("Semi-Reasonable Scrabble"),
-                        ),
-                        DropdownMenuItem(
-                          value: DictionaryType.reasonableScrabble,
-                          child: Text("Reasonable Scrabble"),
-                        ),
-                        DropdownMenuItem(
-                          value: DictionaryType.fullScrabble,
-                          child: Text("Full Scrabble"),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) {
-                          return;
-                        }
-                        setState(() {
-                          dictionaryType = value;
-                        });
-                        generateGameFile();
-                      }),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Player count: "),
-                    DropdownButton<int>(
-                      value: playerCount,
-                      onChanged: (int? newValue) {
-                        if (newValue == null) {
-                          return;
-                        }
-                        setState(() {
-                          if (newValue <= player) {
-                            player = newValue - 1;
+      body: RotaryScrollbar(
+        controller: scrollController,
+        child: SingleChildScrollView(
+          controller: scrollController,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 32),
+                  const Text("Dictionary type: "),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DropdownButton<DictionaryType>(
+                        value: dictionaryType,
+                        items: const [
+                          DropdownMenuItem(
+                            value: DictionaryType.semiReasonableScrabble,
+                            child: Text("Semi-Reasonable Scrabble"),
+                          ),
+                          DropdownMenuItem(
+                            value: DictionaryType.reasonableScrabble,
+                            child: Text("Reasonable Scrabble"),
+                          ),
+                          DropdownMenuItem(
+                            value: DictionaryType.fullScrabble,
+                            child: Text("Full Scrabble"),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) {
+                            return;
                           }
-                          playerCount = newValue;
-                        });
-                        generateGameFile();
-                      },
-                      items: [2, 3, 4, 5, 6].map((index) {
-                        return DropdownMenuItem<int>(
-                          value: index,
-                          child: Text((index).toString()),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Player: "),
-                    DropdownButton<int>(
-                      value: player,
-                      onChanged: (int? newValue) {
-                        if (newValue == null) {
-                          return;
-                        }
+                          setState(() {
+                            dictionaryType = value;
+                          });
+                          generateGameFile();
+                        }),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Player count: "),
+                      DropdownButton<int>(
+                        value: playerCount,
+                        onChanged: (int? newValue) {
+                          if (newValue == null) {
+                            return;
+                          }
+                          setState(() {
+                            if (newValue <= player) {
+                              player = newValue - 1;
+                            }
+                            playerCount = newValue;
+                          });
+                          generateGameFile();
+                        },
+                        items: [2, 3, 4, 5, 6].map((index) {
+                          return DropdownMenuItem<int>(
+                            value: index,
+                            child: Text((index).toString()),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Player: "),
+                      DropdownButton<int>(
+                        value: player,
+                        onChanged: (int? newValue) {
+                          if (newValue == null) {
+                            return;
+                          }
+                          setState(() {
+                            player = newValue;
+                          });
+                          generateGameFile();
+                        },
+                        items: List.generate(playerCount, (index) {
+                          return DropdownMenuItem<int>(
+                            value: index,
+                            child: Text((index + 1).toString()),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: TextField(
+                      autocorrect: false,
+                      decoration: const InputDecoration(
+                        labelText: "Current path (i.e. ghos)",
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
                         setState(() {
-                          player = newValue;
+                          path = value.toLowerCase();
                         });
-                        generateGameFile();
                       },
-                      items: List.generate(playerCount, (index) {
-                        return DropdownMenuItem<int>(
-                          value: index,
-                          child: Text((index + 1).toString()),
-                        );
-                      }),
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: TextField(
-                    autocorrect: false,
-                    decoration: const InputDecoration(
-                      labelText: "Current path (i.e. ghos)",
-                      border: OutlineInputBorder(),
+                  ),
+                  if (isGenerating)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: CircularProgressIndicator(),
+                    )
+                  else if (gameData.isEmpty)
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+                      child: Text("Please choose which player you want to win.",
+                          style: TextStyle(fontSize: 24),
+                          textAlign: TextAlign.center),
+                    )
+                  else
+                    AlgorithmShower(
+                      dictionaryTrie: dictionaryTrie!,
+                      gameData: gameData,
+                      player: player,
+                      playerCount: playerCount,
+                      path: path,
+                      dictionaryType: dictionaryType,
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        path = value.toLowerCase();
-                      });
-                    },
-                  ),
-                ),
-                if (isGenerating)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: CircularProgressIndicator(),
-                  )
-                else if (gameData.isEmpty)
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
-                    child: Text("Please choose which player you want to win.",
-                        style: TextStyle(fontSize: 24),
-                        textAlign: TextAlign.center),
-                  )
-                else
-                  AlgorithmShower(
-                    dictionaryTrie: dictionaryTrie!,
-                    gameData: gameData,
-                    player: player,
-                    playerCount: playerCount,
-                    path: path,
-                    dictionaryType: dictionaryType,
-                  ),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
