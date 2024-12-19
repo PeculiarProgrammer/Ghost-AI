@@ -107,7 +107,7 @@ double determinePercentage(
   return good / count;
 }
 
-// This is a slightly modified version of the trie implementation from retrieval (10x faster than the original for this use case)
+// This is a slightly modified version of the trie implementation from retrieval (10x faster than the original evaluation, 6x overall)
 class Trie {
   final root = TrieNode<void>(key: null, value: null);
 

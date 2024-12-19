@@ -11,6 +11,6 @@ Note: Although this is advertised as AI, it is not. It's simply a semi-optimized
 - [ ] Add more dictionary options
 - [ ] Implement tests
 - [x] Improve efficiency of solving algorithm
-- [ ] Improve efficiency of `determinePercentage` and similar
+- [x] Improve efficiency of `determinePercentage` and similar
 
 If you can think of any more, please leave an issue.

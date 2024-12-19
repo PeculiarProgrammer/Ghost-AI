@@ -367,10 +367,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
             case ConnectionState.none:
               return const SizedBox();
             case ConnectionState.waiting:
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
-                child: CircularProgressIndicator(),
-              );
+              return primaryInterface(context, isLoading: true);
             case ConnectionState.active:
               return const SizedBox();
             case ConnectionState.done:
@@ -384,12 +381,15 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
                     snapshot.data![1] as List<MapEntry<String, double>>;
               }
 
-              return loadedInterface(context);
+              return primaryInterface(context);
           }
         });
   }
 
-  RenderObjectWidget loadedInterface(BuildContext context) {
+  RenderObjectWidget primaryInterface(BuildContext context,
+      {bool isLoading = false}) {
+    // Note: optimalGame and sortedLetters can **only** be used when loading is false.
+
     if (widget.dictionaryTrie.has(widget.path)) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -431,7 +431,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
 
     String recommendedMove = "";
 
-    if (isTurn) {
+    if (isTurn && !isLoading) {
       final topFew = <String>[];
       for (var entry in sortedLetters) {
         if (entry.value == sortedLetters.first.value) {
@@ -491,12 +491,12 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 12),
-        if (isTurn && recommendedMove != "")
+        if (isTurn && (recommendedMove != "" || isLoading))
           const Text(
             "Recommended move:",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
           ),
-        if (isTurn && recommendedMove != "")
+        if (isTurn && recommendedMove != "" && !isLoading)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Row(
@@ -533,7 +533,12 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
               ],
             ),
           ),
-        if (isTurn && recommendedMove != "")
+        if (isTurn && isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4.0),
+            child: CircularProgressIndicator(),
+          ),
+        if (isTurn && (recommendedMove != "" || isLoading))
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 12.0),
             child: Text(
@@ -551,7 +556,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
             "It's not your turn.",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
           )
-        else
+        else if (!isLoading)
           SizedBox(
             height: 256,
             child: SingleChildScrollView(
@@ -602,6 +607,15 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
                 );
               }).toList()),
             ),
+          )
+        else
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: (256 - 128) / 2),
+            child: SizedBox(
+              height: 128,
+              width: 128,
+              child: CircularProgressIndicator(),
+            ),
           ),
         if (isTurn)
           const Padding(
@@ -619,7 +633,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center),
           ),
-        if (!isTurn)
+        if (!isTurn && !isLoading)
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -630,6 +644,11 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
               textAlign: TextAlign.center,
             ),
           ),
+        if (!isTurn && isLoading)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(),
+          ),
         if (!isTurn)
           const Padding(
             padding: EdgeInsets.fromLTRB(8, 28, 8, 0),
@@ -638,7 +657,7 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center),
           ),
-        if (!isTurn)
+        if (!isTurn && !isLoading)
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -659,6 +678,11 @@ class _AlgorithmShowerState extends State<AlgorithmShower> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
               textAlign: TextAlign.center,
             ),
+          ),
+        if (!isTurn && isLoading)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(),
           ),
         if (!isTurn)
           Padding(
